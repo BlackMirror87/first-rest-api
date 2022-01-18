@@ -1,7 +1,10 @@
 package com.example.firstRestApi;
 
+import java.security.PublicKey;
 import java.util.List;
 import java.util.Optional;
+
+import org.hibernate.sql.Update;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-@RequestMapping("/customer")
 public class CustomerController {
 	
 	private CustomerManager customerManager;
@@ -20,39 +22,59 @@ public class CustomerController {
 	}
 	
 	
-	@GetMapping("/getAll")
+	@GetMapping("/customers")
 	public Iterable<Customer> getAll() {
 		return customerManager.findAll();
 	}
 	
-	@GetMapping("/getCustomer")
-	public Optional<Customer> getById(@RequestParam Long id) {
+	@GetMapping("/customers/{id}")
+	public Optional<Customer> getById(@PathVariable Long id) {
 		return customerManager.findById(id);
 	}
-	
-	
-	@PostMapping("/add1")
-	public Customer add(@RequestParam String firstName, @RequestParam String lastName,
-		@RequestParam String email) {
 		
-		Customer customer= new Customer();
-		
-		customer.setFirstName(firstName);
-		customer.setLastName(lastName);
-		customer.setEmail(email);
-
-		return customerManager.save(customer);
-	}
 	
-	
-	@PostMapping("/add2")
+	@PostMapping("/customers")
 	public Customer add(@RequestBody Customer customer) {
 		return customerManager.save(customer);
 	}
 	
 	
-	@DeleteMapping("/delete")
-	public void deleteById(@RequestParam Long id) {
+	@PutMapping("/customers")
+	public Customer update(@RequestBody Customer customer) {
+		return customerManager.save(customer);
+	}
+	
+	
+	@PutMapping("/customers/{id}")
+	public Customer updateById(@RequestBody Customer newCustomer, @PathVariable Long id) {
+		
+		return customerManager.findById(id)
+				.map(customer -> {
+					customer.setFirstName(newCustomer.getFirstName());
+					customer.setLastName(newCustomer.getLastName());
+					customer.setEmail(newCustomer.getEmail());
+					return customerManager.save(customer);
+				})
+				.orElseGet(() -> {
+					return customerManager.save(newCustomer);
+				});	
+	}
+	
+	
+	@PatchMapping("customers/{id}")
+	public Optional<Object> updateEmail(@RequestBody Customer newCastomer, @PathVariable Long id ) {
+		
+		return customerManager.findById(id)
+				.map(customer -> {
+				customer.setEmail(newCastomer.getEmail());
+				return customerManager.save(customer);			
+	});
+	
+		}
+	
+	
+	@DeleteMapping("/customers/{id}")
+	public void deleteById(@PathVariable Long id) {
 		customerManager.deleteById(id);
 	}
 	
